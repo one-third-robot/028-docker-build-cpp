@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:experimental
 
-# prepare the docker   -----------------
 FROM ubuntu:20.04 AS build
 ARG DEBIAN_FRONTEND=noninteractive
 # By default, ubuntu docker images include code to remove downloaded packages.
@@ -21,10 +20,4 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get --no-install-recommends install -y \
-    build-essential \
-    gcc-11 \
-    g++-11 \
-    cmake \
-    libtool \
-    autoconf \
-    pkg-config
+    build-essential gcc-11 g++-11 cmake libtool autoconf pkg-config

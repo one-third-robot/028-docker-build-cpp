@@ -24,10 +24,10 @@ if [[ $(docker ps --filter "name=^/${container_name}$" --format '{{.Names}}') ==
 fi
 
 # build an image from Dockerfile ------------------------
-echo -e "${GRN}Build the image \"${image_name}${NOC}\" ..."
+echo -e "${GRN}Build the image \"${image_name}\"${NOC} ..."
 DOCKER_BUILDKIT=1 docker build \
     -t ${image_name} \
-    -f docker/Dockerfile .
+    -f docker/Dockerfile docker
 
 # create a container and run it ------------------------
 echo -e "${GRN}Run container \"${container_name}\" from image \"${image_name}\"${NOC} ..."
