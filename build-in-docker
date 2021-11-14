@@ -1,0 +1,57 @@
+#!/bin/bash
+set -eu -o pipefail
+
+NOC='\033[0m'
+GRN='\033[0;32m'
+YLW='\033[0;33m'
+
+image_name="docker-build-cpp"
+container_name="cpp-proj"
+target_path="/proj"
+builddir="build"
+
+# stop the container if it is running ------------------------
+if [[ $(docker ps --filter "name=^/${container_name}$" --format '{{.Names}}') == "${container_name}" &&
+"$(docker container inspect -f '{{.State.Running}}' ${container_name})" == "true" ]]; then
+    echo -e "${YLW}Stop container \"${container_name}\"${NOC} ..."
+    docker stop ${container_name}
+fi
+
+# remove the container if it exists but not running ------------------------
+if [[ $(docker ps --filter "name=^/${container_name}$" --format '{{.Names}}') == "${container_name}" ]]; then
+    echo -e "${YLW}Remove container \"${container_name}\"${NOC} ..."
+    docker rm ${container_name}
+fi
+
+# build an image from Dockerfile ------------------------
+# -t: tag, means to give the image a name
+# -f: name and path to the Dockerfile
+# the last "docker" is called target directory
+echo -e "${GRN}Build the image \"${image_name}${NOC}\" ..."
+DOCKER_BUILDKIT=1 docker build \
+    -t ${image_name} \
+    -f docker/Dockerfile \
+    docker
+
+# create a container and run it ------------------------
+#      -d: run the container in the background
+#     -it: (-i) interative mode and (-t) allocate a pseudo-tty
+#    --rm: clean the container when exit
+#  --name: assign a name to the container
+# --mount: to mount the local source directory into the container at target location
+echo -e "${GRN}Run container \"${container_name}\" from image \"${image_name}\"${NOC} ..."
+docker run -d -it --rm \
+    --name ${container_name} \
+    --mount type=bind,source="$(pwd)",target=${target_path} \
+    ${image_name}
+
+# build the project in the container ------------------------
+# ${target_path} ${builddir}: arguments passed into ./docker/build
+echo -e "${GRN}Build the project${NOC} ..."
+docker exec ${container_name} ${target_path}/docker/build \
+    ${target_path} ${builddir}
+
+# play some tricky  ------------------------
+if [ -d ${builddir} ]; then
+    sudo chown $(whoami):$(whoami) ${builddir} -R
+fi

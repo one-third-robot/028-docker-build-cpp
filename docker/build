@@ -1,0 +1,11 @@
+#!/bin/bash
+set -eu -o pipefail
+
+# project root directory, passed from ../build-in-docker
+cd "$1"
+builddir="$2"
+
+# start to build, this part should be customized
+mkdir -p "$builddir" && cd "$builddir"
+cmake ..
+make
